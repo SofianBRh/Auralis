@@ -6,8 +6,6 @@ services:
       context: ./backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app
     networks:
       - app_network
 
@@ -15,9 +13,7 @@ services:
     build:
       context: ./frontend
     ports:
-      - "8080:8080"
-    volumes:
-      - ./frontend:/app
+      - "5000:5000"
     networks:
       - app_network
     depends_on:

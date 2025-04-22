@@ -1,23 +1,20 @@
-# Utiliser l'image officielle Node.js comme base
-FROM node:16-slim
+# Utiliser l'image officielle Python
+FROM python:3.9-slim
 
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers package.json et package-lock.json
-COPY package*.json /app/
+# Copier le fichier requirements.txt pour installer Flask
+COPY requirements.txt /app/
 
-# Installer les dépendances (y compris vue-cli-service)
-RUN npm install
+# Installer les dépendances
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier tout le code source
+# Copier le code source de l'application Flask
 COPY . /app/
 
-# Construire l'application Vue.js pour la production
-RUN npm run build
+# Exposer le port utilisé par Flask
+EXPOSE 5000
 
-# Exposer le port pour l'application Vue.js
-EXPOSE 8080
-
-# Lancer l'application avec un serveur de production
-CMD ["npm", "run", "serve"]
+# Lancer l'application Flask
+CMD ["python", "app.py"]
