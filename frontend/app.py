@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 # Configuration de l'API Mistral (remplace par ta clé API)
-API_KEY = "695f4799-c556-476c-9f04-25b7b192b4cd"
+API_KEY = "osenv"
 BASE_URL = "https://api.scaleway.ai/ac596d48-8004-4950-be23-dca49fca778f/v1"
 
 @app.route('/request')
@@ -62,4 +62,4 @@ mock_data = {
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001)
