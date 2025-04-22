@@ -61,6 +61,8 @@ mock_data = {
         {"ip": "192.168.0.101", "description": "Comportement suspect détecté sur le port 4444."},
         {"ip": "10.0.0.8", "description": "Connexion anormale à un domaine blacklisté."}
     ],
+    "date": "2023-10-01 12:34:56",
+    "hostnames": "example.com",
     "flag": "FLAG{auralis_detected_intrusion}"
 }
 

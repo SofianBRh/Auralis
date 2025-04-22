@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Map intractive  -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <title>Auralis - Dashboard</title>
     <style>
         body {
@@ -87,7 +90,7 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
+            gap: 1rem;
         }
         .card {
             background-color: #1e293b;
@@ -163,15 +166,24 @@
                     <p>{{ protocols }}</p>
                 </div>
                 <div class="card">
+                    <h2>Date</h2>
+                    <p>{{ date }}</p>
+                </div>
+                <div class="card">
                     <h2>Paquets analysés</h2>
                     <p>{{ packet_count }}</p>
                 </div>
                 <div class="card">
                     <h2>HostNames</h2>
-                    <p>{{ hostenames }}</p>
+                    <p>{{ hostnames }}</p>
                 </div>
             </div>
         </section>
+
+        <section id="map-section" style="margin-top: 3rem;">
+            <h1>Localisation des IP suspectes</h1>
+            <div id="map" style="height: 500px; border-radius: 0.75rem; margin-top: 1rem;"></div>
+        </section>              
 
         <section class="flag-section">
             <h1>Flag détecté</h1>
@@ -201,5 +213,32 @@
     <footer>
         <p>&copy; 2025 Auralis Cybersecurity. Tous droits réservés.</p>
     </footer>
+
+
+    <script>
+        // Exemple de points (légèrement décalés autour de Montpellier)
+        const ipLocations = [
+            { ip: "192.168.0.101", lat: 43.6117, lon: 3.8767, description: "Comportement suspect détecté sur le port 4444." }, // Montpellier
+            { ip: "10.0.0.8", lat: 43.6120, lon: 3.8770, description: "Connexion anormale à un domaine blacklisté." }, // Légèrement décalé
+            { ip: "172.16.0.2", lat: 43.6115, lon: 3.8755, description: "Tentative de scan réseau." } // Légèrement décalé
+        ];
+    
+        // Créer la carte centrée sur Montpellier
+        const map = L.map('map').setView([43.6117, 3.8767], 13); // Vue centrée sur Montpellier
+    
+        // Ajouter le fond de carte OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+    
+        // Ajouter les marqueurs sur la carte
+        ipLocations.forEach(ip => {
+            L.marker([ip.lat, ip.lon])
+                .addTo(map)
+                .bindPopup(`<b>${ip.ip}</b><br>${ip.description}`);
+        });
+    </script>
+    
+    
 </body>
 </html>
