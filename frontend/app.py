@@ -7,13 +7,13 @@ app = Flask(__name__)
 API_KEY = "695f4799-c556-476c-9f04-25b7b192b4cd"
 BASE_URL = "https://api.scaleway.ai/ac596d48-8004-4950-be23-dca49fca778f/v1"
 
-@app.route('/')
-def request():
+@app.route('/request')
+def request_page():
     return render_template('request.html')
 
 @app.route('/')
 def dashboard():
-    return render_template('index.html', **mock_data)
+    return render_template('dashboard.html', **mock_data)
 
 @app.route('/request_mistral', methods=['POST'])
 def request_mistral():
