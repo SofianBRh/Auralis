@@ -8,8 +8,12 @@ API_KEY = "695f4799-c556-476c-9f04-25b7b192b4cd"
 BASE_URL = "https://api.scaleway.ai/ac596d48-8004-4950-be23-dca49fca778f/v1"
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def request():
+    return render_template('request.html')
+
+@app.route('/')
+def dashboard():
+    return render_template('index.html', **mock_data)
 
 @app.route('/request_mistral', methods=['POST'])
 def request_mistral():
@@ -37,6 +41,25 @@ def request_mistral():
         return render_template('index.html', response=response_data["choices"][0]["message"]["content"])
     except requests.exceptions.RequestException as e:
         return render_template('index.html', response="Une erreur est survenue lors de la requête.")
+    
+
+
+
+# --- MOCK DATA à remplacer par la vraie analyse plus tard (les retours à envoyer au front)---
+mock_data = {
+    "user_name": "prince",
+    "source_ip_count": 42,
+    "destination_ip_count": 37,
+    "protocols": "TCP, UDP, HTTP, DNS",
+    "packet_count": 1087,
+    "ai_analysis_result": "Activité réseau normale détectée. Aucun comportement malveillant repéré dans ce segment.",
+    "alerts": [
+        {"ip": "192.168.0.101", "description": "Comportement suspect détecté sur le port 4444."},
+        {"ip": "10.0.0.8", "description": "Connexion anormale à un domaine blacklisté."}
+    ],
+    "flag": "FLAG{auralis_detected_intrusion}"
+}
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

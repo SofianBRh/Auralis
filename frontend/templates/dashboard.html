@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auralis - Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        header {
+            background-color: #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #00e0ff;
+        }
+        nav {
+            display: flex;
+            align-items: center;
+        }
+        nav a {
+            color: #cbd5e1;
+            margin-left: 1rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        nav a:hover {
+            color: #00e0ff;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin-left: 2rem;
+            cursor: pointer;
+        }
+        .user-menu img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        .user-menu span {
+            font-weight: 500;
+            color: #f1f5f9;
+        }
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .dropdown a {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: #cbd5e1;
+            text-decoration: none;
+        }
+        .dropdown a:hover {
+            background-color: #334155;
+        }
+        .user-menu:hover .dropdown {
+            display: block;
+        }
+        main {
+            padding: 2rem;
+        }
+        h1 {
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        .card {
+            background-color: #1e293b;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h2 {
+            color: #38bdf8;
+        }
+        .ai-analysis, .alerts, .flag-section {
+            margin-top: 3rem;
+        }
+        .ai-output, .alert-card, .flag-box {
+            background-color: #1e293b;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .alert-card h2 {
+            color: #f87171;
+        }
+        .flag-box h2 {
+            color: #4ade80;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #1e293b;
+            margin-top: 2rem;
+            color: #94a3b8;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">Auralis</div>
+        <nav>
+            <a href="#">Tableau de bord</a>
+            <a href="#analyse">Analyse IA</a>
+            <a href="#alertes">Alertes</a>
+            <div class="user-menu">
+                <img src="https://i.pravatar.cc/300?img=12" alt="Profil">
+                <span>{{ user_name }}</span>
+                <div class="dropdown">
+                    <a href="/account">Mon compte</a>
+                    <a href="/logout">Déconnexion</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="summary">
+            <h1>Résumé du Trafic Réseau</h1>
+            <div class="grid">
+                <div class="card">
+                    <h2>IP Sources</h2>
+                    <p>{{ source_ip_count }}</p>
+                </div>
+                <div class="card">
+                    <h2>IP Destinations</h2>
+                    <p>{{ destination_ip_count }}</p>
+                </div>
+                <div class="card">
+                    <h2>Protocoles détectés</h2>
+                    <p>{{ protocols }}</p>
+                </div>
+                <div class="card">
+                    <h2>Paquets analysés</h2>
+                    <p>{{ packet_count }}</p>
+                </div>
+                <div class="card">
+                    <h2>HostNames</h2>
+                    <p>{{ hostenames }}</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="flag-section">
+            <h1>Flag détecté</h1>
+            <div class="flag-box">
+                <h2>{{ flag }}</h2>
+            </div>
+        </section>
+
+        <section id="analyse" class="ai-analysis">
+            <h1>Analyse par Intelligence Artificielle</h1>
+            <div class="ai-output">
+                <p>{{ ai_analysis_result }}</p>
+            </div>
+        </section>
+
+        <section id="alertes" class="alerts">
+            <h1>Alertes et Activités Suspectes</h1>
+            {% for alert in alerts %}
+            <div class="alert-card">
+                <h2>{{ alert.ip }}</h2>
+                <p>{{ alert.description }}</p>
+            </div>
+            {% endfor %}
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Auralis Cybersecurity. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
