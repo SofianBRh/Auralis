@@ -10,7 +10,7 @@ app = FastAPI()
 # Configuration de l'API Mistral
 client = OpenAI(
     base_url="https://api.scaleway.ai/ac596d48-8004-4950-be23-dca49fca778f/v1",
-    api_key="695f4799-c556-476c-9f04-25b7b192b4cd"
+    api_key=OS.getenv("OPENAI_API_KEY")
 )
 
 # Fonction pour télécharger le fichier PCAP
