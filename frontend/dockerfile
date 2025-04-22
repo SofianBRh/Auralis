@@ -1,0 +1,23 @@
+# Utiliser l'image officielle Node.js comme base
+FROM node:16-slim
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers package.json et package-lock.json
+COPY package*.json /app/
+
+# Installer les dépendances (y compris vue-cli-service)
+RUN npm install
+
+# Copier tout le code source
+COPY . /app/
+
+# Construire l'application Vue.js pour la production
+RUN npm run build
+
+# Exposer le port pour l'application Vue.js
+EXPOSE 8080
+
+# Lancer l'application avec un serveur de production
+CMD ["npm", "run", "serve"]
