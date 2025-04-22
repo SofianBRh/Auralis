@@ -1,75 +1,47 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
+from fastapi.openapi.models import APIKey
 import requests
 import pyshark
 import os
-import time
-from openai import OpenAI
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement depuis .env
+load_dotenv()
 
 app = FastAPI()
 
-# Configuration de l'API Mistral
-client = OpenAI(
-    base_url="https://api.scaleway.ai/ac596d48-8004-4950-be23-dca49fca778f/v1",
-    api_key=OS.getenv("OPENAI_API_KEY")
-)
+# Variables d'environnement
+API_KEY = os.getenv("API_KEY")
+BASE_URL = os.getenv("BASE_URL")
 
-# Fonction pour télécharger le fichier PCAP
-def download_pcap():
-    url = "http://93.127.203.48:5000/pcap/latest"
-    response = requests.get(url)
-    if response.status_code == 200:
-        filename = response.headers.get("Content-Disposition").split("filename=")[1]
-        with open(f"/app/{filename}", "wb") as f:
-            f.write(response.content)
-        return filename
-    else:
-        raise HTTPException(status_code=500, detail="Erreur lors du téléchargement du fichier PCAP.")
+@app.get("/")
+def read_root():
+    return {"message": "Bienvenue dans l'API FastAPI avec Swagger"}
 
-# Vérification si le nom du fichier a changé
-def check_for_new_pcap():
-    current_file = "/app/latest.pcap"
-    new_file = download_pcap()
-    if current_file != new_file:
-        return new_file
-    return None
+@app.get("/docs")
+def get_swagger_docs():
+    return {"message": "Accédez à la documentation Swagger ici: /docs"}
 
-# Fonction pour analyser les données du fichier PCAP
-def analyse_pcap(filename):
-    cap = pyshark.FileCapture(f"/app/{filename}")
-    packets_info = []
+@app.post("/request_mistral")
+async def request_mistral(model: str, messages: str, temperature: float = 0.3, max_tokens: int = 256):
+    payload = {
+        "model": model,
+        "messages": [{"role": "system", "content": "Vous êtes un assistant utile."}, {"role": "user", "content": messages}],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "top_p": 1
+    }
 
-    for packet in cap:
-        packet_info = {
-            "src_ip": packet.ip.src if hasattr(packet, 'ip') else "N/A",
-            "dst_ip": packet.ip.dst if hasattr(packet, 'ip') else "N/A",
-            "protocol": packet.transport_layer if hasattr(packet, 'transport_layer') else "N/A",
-            "time": packet.sniff_time.isoformat() if hasattr(packet, 'sniff_time') else "N/A",
-            "packet_analysis": str(packet)  # Ajouter des informations détaillées sur le paquet
-        }
-        packets_info.append(packet_info)
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
 
-    return packets_info
-
-# Endpoint pour récupérer et analyser le PCAP
-@app.get("/analyse_pcap")
-async def analyse():
     try:
-        new_pcap = check_for_new_pcap()
-        if new_pcap:
-            packets_info = analyse_pcap(new_pcap)
-            # Utilisation de l'API Mistral pour enrichir l'analyse (ici un exemple d'enrichissement)
-            response = client.chat.completions.create(
-                model="mistral-nemo-instruct-2407",
-                messages=[
-                    {"role": "system", "content": "Vous êtes un assistant de sécurité."},
-                    {"role": "user", "content": str(packets_info)}
-                ],
-                max_tokens=256,
-                temperature=0.3,
-                top_p=1,
-            )
-            return {"status": "success", "data": packets_info, "ai_analysis": response.choices[0].message.content}
-        else:
-            return {"status": "no_change", "message": "Le fichier PCAP n'a pas changé."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        response = requests.post(f"{BASE_URL}/chat/completions", json=payload, headers=headers)
+        response_data = response.json()
+        return response_data["choices"][0]["message"]["content"]
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}
+
+# La documentation Swagger est automatiquement générée et disponible à l'adresse "/docs" par défaut

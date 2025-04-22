@@ -1,15 +1,21 @@
 from flask import Flask, render_template, request
 import requests
+from dotenv import load_dotenv
+import os
+
+# Charger les variables d'environnement depuis le fichier .env
+load_dotenv()
 
 app = Flask(__name__)
 
-# Configuration de l'API Mistral (remplace par ta clé API)
-API_KEY = "osenv"
-BASE_URL = "https://api.scaleway.ai/ac596d48-8004-4950-be23-dca49fca778f/v1"
+# Récupérer les données sensibles depuis les variables d'environnement
+API_KEY = os.getenv("API_KEY")
+BASE_URL = os.getenv("BASE_URL")
 
 @app.route('/request')
 def request_page():
     return render_template('request.html')
+
 
 @app.route('/')
 def dashboard():
@@ -43,8 +49,6 @@ def request_mistral():
         return render_template('index.html', response="Une erreur est survenue lors de la requête.")
     
 
-
-
 # --- MOCK DATA à remplacer par la vraie analyse plus tard (les retours à envoyer au front)---
 mock_data = {
     "user_name": "prince",
@@ -59,7 +63,6 @@ mock_data = {
     ],
     "flag": "FLAG{auralis_detected_intrusion}"
 }
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)

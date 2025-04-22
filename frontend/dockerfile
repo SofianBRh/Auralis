@@ -4,16 +4,16 @@ FROM python:3.9-slim
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Copier le fichier requirements.txt pour installer Flask
+# Copier le fichier requirements.txt
 COPY requirements.txt /app/
 
 # Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code source de l'application Flask
+# Copier l'application Flask
 COPY . /app/
 
-# Exposer le port utilisé par Flask
+# Exposer le port de l'application Flask
 EXPOSE 5001
 
 # Lancer l'application Flask

@@ -6,6 +6,8 @@ services:
       context: ./backend
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend:/app  # Monter le dossier backend pour le live reload
     networks:
       - app_network
 
@@ -14,6 +16,8 @@ services:
       context: ./frontend
     ports:
       - "5001:5001"
+    volumes:
+      - ./frontend:/app  # Monter le dossier frontend pour le live reload
     networks:
       - app_network
     depends_on:
