@@ -121,6 +121,64 @@
         .flag-box h2 {
             color: #4ade80;
         }
+
+
+        .btn-analyse {
+      padding: 12px 24px;
+      background: #4A90E2;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: background 0.3s ease;
+    }
+
+    .btn-analyse:hover {
+      background: #357ABD;
+    }
+
+    .bar-container {
+      margin-top: 2rem;
+      width: 100%;
+      height: 20px;
+      border-radius: 10px;
+      background-color: #e0e0e0;
+      overflow: hidden;
+    }
+
+    .criticity-bar {
+      height: 100%;
+      width: 0%;
+      background-color: green;
+      transition: width 0.5s ease, background-color 0.5s ease;
+    }
+    .criticity-info {
+  margin-top: 10px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  font-family: 'Segoe UI', sans-serif;
+  max-width: 300px;
+  transition: background-color 0.3s ease;
+}
+
+.criticity-info h3 {
+  margin: 0;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.criticity-info p {
+  margin: 5px 0 0;
+  font-size: 0.95em;
+  color: #666;
+}
+
+
         footer {
             text-align: center;
             padding: 1rem;
@@ -150,12 +208,20 @@
     </header>
 
     <main>
+
+        <section class="flag-section" style="margin-top: -30px !important;">
+            <h1>Flag détecté</h1>
+            <div class="flag-box">
+                <h2>{{ flag }}</h2>
+            </div>
+        </section>
+
         <section class="summary">
             <h1>Activité suspecte</h1>
             <div class="grid">
                 <div class="card">
                     <h2>IP Suspecte</h2>
-                    <p>{{ ip_suspect }}</p>
+                    <p id="ipDisplay">{{ ip_suspect }}</p>
                 </div>
                 <div class="card">
                     <h2>Nom d'hôte</h2>
@@ -174,22 +240,25 @@
                     <p>{{ machine }}</p>
                 </div>
             </div>
-        </section>
+        </section><br><br>
+
+        <button class="btn-analyse" onclick="analyserIP()">Analyser l'IP suspecte - Virus Total</button>
+
+        <div class="bar-container">
+            <div class="criticity-bar" id="criticityBar"></div>
+        </div>
+        <div id="criticityInfo" class="criticity-info">
+            <h3>Criticité : <span id="criticityValue"></span>/100</h3>
+            <p id="criticityComment"></p>
+        </div>          
 
         <section id="map-section" style="margin-top: 3rem;">
-            <h1>Localisation des IP suspectes</h1>
+            <h1>Localisation d'IP suspecte</h1>
             <div id="map" style="height: 500px; border-radius: 0.75rem; margin-top: 1rem;"></div>
-        </section>              
-
-        <section class="flag-section">
-            <h1>Flag détecté</h1>
-            <div class="flag-box">
-                <h2>{{ flag }}</h2>
-            </div>
         </section>
 
         <section id="analyse" class="ai-analysis">
-            <h1>Analyse par Intelligence Artificielle</h1>
+            <h1>Mistral IA</h1>
             <div class="ai-output">
                 <p>{{ message }}</p>
             </div>
@@ -201,29 +270,96 @@
         <p>&copy; 2025 Auralis Cybersecurity. Tous droits réservés.</p>
     </footer>
 
-
-    <script>
-        // Exemple de points (légèrement décalés autour de Montpellier)
-        const ipLocations = [
-            { ip: "192.168.0.101", lat: 43.6117, lon: 3.8767, description: "Comportement suspect détecté sur le port 4444." }, // Montpellier
-            { ip: "10.0.0.8", lat: 43.6120, lon: 3.8770, description: "Connexion anormale à un domaine blacklisté." }, // Légèrement décalé
-            { ip: "172.16.0.2", lat: 43.6115, lon: 3.8755, description: "Tentative de scan réseau." } // Légèrement décalé
-        ];
+<!-- VIRUS TOAL AP  -->
+<script>
+    let map;         // Carte globale
+    let ipMarker;    // Marqueur global
     
-        // Créer la carte centrée sur Montpellier
-        const map = L.map('map').setView([43.6117, 3.8767], 13); // Vue centrée sur Montpellier
+    // Initialiser la carte à l'ouverture de la page
+    document.addEventListener('DOMContentLoaded', function () {
+        map = L.map('map').setView([43.6117, 3.8767], 13); // Vue par défaut : Montpellier
     
-        // Ajouter le fond de carte OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
+    });
     
-        // Ajouter les marqueurs sur la carte
-        ipLocations.forEach(ip => {
-            L.marker([ip.lat, ip.lon])
-                .addTo(map)
-                .bindPopup(`<b>${ip.ip}</b><br>${ip.description}`);
-        });
+    async function analyserIP() {
+        const ip = document.getElementById('ipDisplay').innerText.trim();
+    
+        // Appel à l'API Flask pour analyse VirusTotal
+        const response = await fetch(`/analyse_ip?ip=${ip}`);
+        const data = await response.json();
+    
+        if (data.error) {
+            alert("Erreur : " + data.error);
+            return;
+        }
+    
+        const criticity = data.criticity;
+        const bar = document.getElementById('criticityBar');
+        bar.style.width = criticity + "%";
+    
+        // Couleur et largeur dynamiques en fonction de la criticité
+        let adjustedCriticity = criticity;
+        if (criticity === 0) {
+            adjustedCriticity = 1; // minimum visible
+        }
+        bar.style.width = adjustedCriticity + "%";
+
+        if (criticity < 30) {
+            bar.style.backgroundColor = "green";
+        } else if (criticity < 70) {
+            bar.style.backgroundColor = "orange";
+        } else {
+            bar.style.backgroundColor = "red";
+        }
+            
+        // Texte et commentaire sur la criticité
+        document.getElementById('criticityValue').textContent = criticity;
+        const comment = document.getElementById('criticityComment');
+    
+        if (criticity < 20) {
+            comment.textContent = "Aucune menace détectée.";
+        } else if (criticity < 50) {
+            comment.textContent = "Comportement potentiellement suspect.";
+        } else if (criticity < 80) {
+            comment.textContent = "Activité malveillante probable.";
+        } else {
+            comment.textContent = "Menace élevée détectée !";
+        }
+    
+        // Récupération de la localisation de l'IP
+        const locationData = await fetch(`https://ipinfo.io/${ip}/json`);
+        const location = await locationData.json();
+    
+        const coordinates = location.loc ? location.loc.split(',') : ['43.6117', '3.8767'];
+        const lat = parseFloat(coordinates[0]);
+        const lon = parseFloat(coordinates[1]);
+    
+        // Affichage de la position sur la carte
+        afficherCarte(lat, lon);
+    
+        // Debug
+        console.log(`IP ${data.ip} - Détections : ${data.malicious}, Criticité : ${criticity}`);
+        console.log("Données complètes : ", data);
+    }
+    
+    function afficherCarte(lat, lon) {
+        // Recentrer la carte
+        map.setView([lat, lon], 13);
+    
+        // Retirer l'ancien marqueur s'il existe
+        if (ipMarker) {
+            map.removeLayer(ipMarker);
+        }
+    
+        // Ajouter un nouveau marqueur
+        ipMarker = L.marker([lat, lon])
+            .addTo(map)
+            .bindPopup(`<b>IP suspecte</b><br>Coordonnées : ${lat}, ${lon}`)
+            .openPopup();
+    }
     </script>
     
     
