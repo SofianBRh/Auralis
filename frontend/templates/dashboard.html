@@ -151,31 +151,27 @@
 
     <main>
         <section class="summary">
-            <h1>Résumé du Trafic Réseau</h1>
+            <h1>Activité suspecte</h1>
             <div class="grid">
                 <div class="card">
-                    <h2>IP Sources</h2>
-                    <p>{{ source_ip_count }}</p>
+                    <h2>IP Suspecte</h2>
+                    <p>{{ ip_suspect }}</p>
                 </div>
                 <div class="card">
-                    <h2>IP Destinations</h2>
-                    <p>{{ destination_ip_count }}</p>
+                    <h2>Nom d'hôte</h2>
+                    <p>{{ hostnames }}</p>
                 </div>
                 <div class="card">
-                    <h2>Protocoles détectés</h2>
-                    <p>{{ protocols }}</p>
+                    <h2>Nom d'utilisateur</h2>
+                    <p>{{ user_name }}</p>
                 </div>
                 <div class="card">
                     <h2>Date</h2>
                     <p>{{ date }}</p>
                 </div>
                 <div class="card">
-                    <h2>Paquets analysés</h2>
-                    <p>{{ packet_count }}</p>
-                </div>
-                <div class="card">
-                    <h2>HostNames</h2>
-                    <p>{{ hostnames }}</p>
+                    <h2>Nom du PC</h2>
+                    <p>{{ machine }}</p>
                 </div>
             </div>
         </section>
@@ -195,19 +191,10 @@
         <section id="analyse" class="ai-analysis">
             <h1>Analyse par Intelligence Artificielle</h1>
             <div class="ai-output">
-                <p>{{ ai_analysis_result }}</p>
+                <p>{{ message }}</p>
             </div>
         </section>
 
-        <section id="alertes" class="alerts">
-            <h1>Alertes et Activités Suspectes</h1>
-            {% for alert in alerts %}
-            <div class="alert-card">
-                <h2>{{ alert.ip }}</h2>
-                <p>{{ alert.description }}</p>
-            </div>
-            {% endfor %}
-        </section>
     </main>
 
     <footer>

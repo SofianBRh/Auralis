@@ -52,15 +52,15 @@ def request_mistral():
 # --- MOCK DATA à remplacer par la vraie analyse plus tard (les retours à envoyer au front)---
 mock_data = {
     "user_name": "prince",
-    "source_ip_count": 42,
-    "destination_ip_count": 37,
+    "ip_suspect": 42,
+    "machine": "hp_buro",
     "protocols": "TCP, UDP, HTTP, DNS",
     "packet_count": 1087,
-    "ai_analysis_result": "Activité réseau normale détectée. Aucun comportement malveillant repéré dans ce segment.",
-    "alerts": [
-        {"ip": "192.168.0.101", "description": "Comportement suspect détecté sur le port 4444."},
-        {"ip": "10.0.0.8", "description": "Connexion anormale à un domaine blacklisté."}
-    ],
+    "message": "Activité réseau normale détectée. Aucun comportement malveillant repéré dans ce segment.",
+    # "alerts": [
+    #     {"ip": "192.168.0.101", "description": "Comportement suspect détecté sur le port 4444."},
+    #     {"ip": "10.0.0.8", "description": "Connexion anormale à un domaine blacklisté."}
+    # ],
     "date": "2023-10-01 12:34:56",
     "hostnames": "example.com",
     "flag": "FLAG{auralis_detected_intrusion}"
