@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import subprocess
+import tempfile
+import re
+import string
+from scapy.all import rdpcap, Ether, IP, UDP, TCP
+from scapy.layers.dhcp import DHCP
+from scapy.layers.http import HTTPRequest
+from scapy.layers.netbios import NBNSQueryRequest
+from tabulate import tabulate
+
+PCAP_URL = "http://93.127.203.48:5000/pcap/latest"
+
+# Couleurs pour l'affichage en terminal
+class Colors:
+    GREEN = '\033[92m'
+    BLUE = '\033[94m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+
+def print_info(msg, color=Colors.BLUE):
+    print(f"{color}{msg}{Colors.ENDC}")
+
+def print_error(msg):
+    print(f"{Colors.RED}[ERREUR] {msg}{Colors.ENDC}")
+
+def print_success(msg):
+    print(f"{Colors.GREEN}[SUCCÈS] {msg}{Colors.ENDC}")
+
+def clean_username(raw_bytes):
+    for encoding in ['utf-8', 'latin1', 'windows-1252']:
+        try:
+            decoded = raw_bytes.decode(encoding)
+            clean = ''.join(c for c in decoded if c in string.printable)
+            if clean:
+                return clean
+        except:
+            continue
+    return None
+
+def extract_dhcp_info(packet):
+    info = {}
+
+    if DHCP in packet:
+        dhcp_options = packet[DHCP].options
+        for option in dhcp_options:
+            if isinstance(option, tuple) and len(option) == 2:
+                option_name, value = option
+                if option_name == 'hostname':
+                    hostname = clean_username(value)
+                    if hostname:
+                        info['hostname'] = hostname
+                elif option_name == 'client_id':
+                    user = clean_username(value[1:])
+                    if user:
+                        info['user'] = user
+
+        if Ether in packet:
+            info['mac'] = packet[Ether].src
+        if IP in packet:
+            info['ip'] = packet[IP].src
+            info['dst_ip'] = packet[IP].dst
+
+    return info
+
+def extract_http_info(packet):
+    info = {}
+
+    if packet.haslayer(HTTPRequest):
+        http_layer = packet[HTTPRequest]
+
+        if Ether in packet:
+            info['mac'] = packet[Ether].src
+        if IP in packet:
+            info['ip'] = packet[IP].src
+            info['dst_ip'] = packet[IP].dst
+
+        if hasattr(http_layer, 'User_Agent') and http_layer.User_Agent:
+            info['user_agent'] = clean_username(http_layer.User_Agent)
+
+        if hasattr(http_layer, 'Cookie') and http_layer.Cookie:
+            cookie = clean_username(http_layer.Cookie)
+            user_match = re.search(r'user[=_]([^;]+)', cookie, re.IGNORECASE)
+            if user_match:
+                info['user'] = user_match.group(1)
+
+        if hasattr(http_layer, 'Host') and http_layer.Host:
+            info['hostname'] = clean_username(http_layer.Host)
+
+    return info
+
+def extract_kerberos_info(packet):
+    info = {}
+
+    if Ether in packet:
+        info['mac'] = packet[Ether].src
+    if IP in packet:
+        info['ip'] = packet[IP].src
+        info['dst_ip'] = packet[IP].dst
+
+    try:
+        if UDP in packet and (packet[UDP].dport == 88 or packet[UDP].sport == 88):
+            raw_data = bytes(packet[UDP].payload)
+        elif TCP in packet and (packet[TCP].dport == 88 or packet[TCP].sport == 88):
+            raw_data = bytes(packet[TCP].payload)
+        else:
+            return {}
+
+        match = re.search(b'CNameString.*?([a-zA-Z0-9_.-]+)@([a-zA-Z0-9_.-]+)', raw_data)
+        if match:
+            user = match.group(1).decode('utf-8', errors='replace')
+            hostname = match.group(2).decode('utf-8', errors='replace')
+            info['user'] = user
+            info['hostname'] = hostname
+
+    except:
+        pass
+
+    return info
+
+def extract_nbns_info(packet):
+    return {}
+
+def analyze_pcap(pcap_file):
+    print_info(f"Analyse du fichier PCAP: {pcap_file}")
+
+    try:
+        packets = rdpcap(pcap_file)
+    except Exception as e:
+        print_error(f"Erreur lors de la lecture du fichier PCAP: {e}")
+        return []
+
+    print_info(f"Nombre total de paquets: {len(packets)}")
+    results = []
+
+    for idx, packet in enumerate(packets):
+        if packet.haslayer(NBNSQueryRequest):
+            continue
+
+        packet_info = {}
+
+        if UDP in packet and (packet[UDP].dport == 67 or packet[UDP].dport == 68):
+            packet_info = extract_dhcp_info(packet)
+        elif packet.haslayer(HTTPRequest):
+            packet_info = extract_http_info(packet)
+        elif (UDP in packet and (packet[UDP].dport == 88 or packet[UDP].sport == 88)) or \
+             (TCP in packet and (packet[TCP].dport == 88 or packet[TCP].sport == 88)):
+            packet_info = extract_kerberos_info(packet)
+
+        if all(k in packet_info for k in ['mac', 'ip', 'dst_ip', 'user', 'hostname']):
+            results.append(packet_info)
+
+    return results
+
+def display_table(results):
+    if not results:
+        print_info("Aucune information complète trouvée.")
+        return
+
+    print_success(f"{len(results)} paquets avec toutes les informations détectées :\n")
+
+    table = []
+    headers = ['MAC Adresse', 'IP Source', 'IP Destination', 'Nom Utilisateur', 'Hostname']
+    for info in results:
+        table.append([
+            info.get('mac', ''),
+            info.get('ip', ''),
+            info.get('dst_ip', ''),
+            info.get('user', ''),
+            info.get('hostname', '')
+        ])
+
+    print(tabulate(table, headers=headers, tablefmt='fancy_grid'))
+
+def main():
+    print_info(f"Téléchargement du fichier PCAP depuis l'URL : {PCAP_URL}")
+    temp_dir = tempfile.gettempdir()
+    local_filename = os.path.join(temp_dir, "latest.pcap")
+    try:
+        subprocess.run(['wget', '-q', '-O', local_filename, PCAP_URL], check=True)
+        print_success(f"Fichier téléchargé avec succès : {local_filename}")
+    except subprocess.CalledProcessError as e:
+        print_error(f"Échec du téléchargement du fichier PCAP : {e}")
+        return
+
+    results = analyze_pcap(local_filename)
+    display_table(results)
+
+if __name__ == "__main__":
+    main()
