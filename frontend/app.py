@@ -87,7 +87,7 @@ def analyse_ip():
 # --- MOCK DATA à remplacer par la vraie analyse plus tard (les retours à envoyer au front)---
 mock_data = {
     "user_name": "prince",
-    "ip_suspect": "192.168.1.156",
+    "ip_suspect": "0.0.0.0",
     "machine": "hp_buro",
     "protocols": "TCP, UDP, HTTP, DNS",
     "packet_count": 1087,
